@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý File - Đăng nhập/Đăng ký</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <style>
+        body {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 400px;
+            width: 100%;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            <h2 class="text-center">Đăng nhập</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="text" id="email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Mật khẩu</label>
+                    <input type="password" id="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Đăng nhập</button>
+            </form>
+            <p class="text-center mt-3">Chưa có tài khoản? <a href="#register" id="show-register">Đăng ký tại đây</a></p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center mt-5" id="register" style="display: none;">
+        <div class="col-md-12">
+            <h2 class="text-center">Đăng ký</h2>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="reg-username">Tên người dùng</label>
+                    <input type="text" id="reg-username" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-email">Email</label>
+                    <input type="email" id="reg-email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">Mật khẩu</label>
+                    <input type="password" id="reg-password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Đăng ký</button>
+                <button type="button" class="btn btn-link btn-block" id="show-login">Quay lại Đăng nhập</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row justify-content-center mt-5" id="profile" style="display: none;">
+        <div class="col-md-12">
+            <h2 class="text-center">Thông tin cá nhân</h2>
+            <form id="profile-form">
+                <div class="form-group">
+                    <label for="profile-username">Tên người dùng</label>
+                    <input type="text" id="profile-username" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="profile-email">Email</label>
+                    <input type="email" id="profile-email" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Cập nhật thông tin</button>
+            </form>
+            <button type="button" id="go-to-home" class="btn btn-primary btn-block mt-3">Đi đến trang chủ</button>
+            <button id="change-password-btn" class="btn btn-secondary btn-block mt-3">Đổi mật khẩu</button>
+            <button id="logout-btn" class="btn btn-danger btn-block mt-3">Đăng xuất</button>
+        </div>
+    </div>
+
+    <div class="row justify-content-center mt-5" id="change-password" style="display: none;">
+        <div class="col-md-12">
+            <h2 class="text-center">Đổi mật khẩu</h2>
+            <form id="change-password-form">
+                <div class="form-group">
+                    <label for="old-password">Mật khẩu cũ</label>
+                    <input type="password" id="old-password" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-password">Mật khẩu mới</label>
+                    <input type="password" id="new-password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Đổi mật khẩu</button>
+                <button type="button" class="btn btn-link btn-block" id="back-to-profile">Quay lại Thông tin cá nhân</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+
+        $('#go-to-home').click(function() {
+            window.location.href = '/home';
+        });
+
+        $('#login-form').submit(function(e) {
+            e.preventDefault();
+
+            $.ajax({
+                url: '/api/user/login',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    email: $('#email').val(),
+                    password: $('#password').val()
+                }),
+                success: function(response) {
+                    localStorage.setItem('token', response.access_token);
+                    Swal.fire('Thành công!', response.message, 'success');
+                    loadProfile();
+                },
+                error: function(err) {
+                    Swal.fire('Lỗi!', 'Email hoặc mật khẩu không đúng.', 'error');
+                }
+            });
+        });
+
+        $('#register-form').submit(function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: '/api/user/register',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    username: $('#reg-username').val(),
+                    email: $('#reg-email').val(),
+                    password: $('#reg-password').val()
+                }),
+                success: function(response) {
+                    Swal.fire('Thành công!', 'Đăng ký thành công!', 'success');
+                    $('#register').hide();
+                    $('.row:has(#login-form)').show();
+                },
+                error: function(err) {
+                    Swal.fire('Lỗi!', 'Tên người dùng hoặc email đã tồn tại.', 'error');
+                }
+            });
+        });
+
+        $('#profile-form').submit(function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: '/api/user/update',
+                type: 'PUT',
+                contentType: 'application/json',
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+                data: JSON.stringify({
+                    username: $('#profile-username').val(),
+                    email: $('#profile-email').val()
+                }),
+                success: function(response) {
+                    Swal.fire('Thành công!', 'Cập nhật thông tin thành công!', 'success');
+                },
+                error: function(err) {
+                    Swal.fire('Lỗi!', 'Không thể cập nhật thông tin.', 'error');
+                }
+            });
+        });
+
+        $('#change-password-form').submit(function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: '/api/user/change-password',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+                data: JSON.stringify({
+                    old_password: $('#old-password').val(),
+                    new_password: $('#new-password').val()
+                }),
+                success: function(response) {
+                    Swal.fire('Thành công!', 'Đổi mật khẩu thành công!', 'success');
+                    $('#change-password').hide();
+                    $('#profile').show();
+                },
+                error: function(err) {
+                    Swal.fire('Lỗi!', 'Không thể đổi mật khẩu.', 'error');
+                }
+            });
+        });
+
+        $('#show-register').click(function() {
+            $('#register').show();
+            $('.row:has(#login-form)').hide();
+        });
+
+        $('#show-login').click(function() {
+            $('#register').hide();
+            $('.row:has(#login-form)').show();
+        });
+
+        $('#change-password-btn').click(function() {
+            $('#profile').hide();
+            $('#change-password').show();
+        });
+
+        $('#back-to-profile').click(function() {
+            $('#change-password').hide();
+            $('#profile').show();
+        });
+
+        $('#logout-btn').click(function() {
+            localStorage.removeItem('token');
+            $('#profile').hide();
+            $('.row:has(#login-form)').show();
+        });
+
+        function loadProfile() {
+            $.ajax({
+                url: '/api/user/profile',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+                success: function(response) {
+                    $('#profile-username').val(response.username);
+                    $('#profile-email').val(response.email);
+                    $('.row:has(#login-form)').hide();
+                    $('#register').hide();
+                    $('#profile').show();
+                },
+                error: function(err) {
+                    Swal.fire('Lỗi!', 'Không thể tải thông tin cá nhân.', 'error');
+                }
+            });
+        }
+
+        if (localStorage.getItem('token')) {
+            loadProfile();
+        }
+    });
+</script>
+
+</body>
+</html>
